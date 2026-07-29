@@ -61,7 +61,7 @@ def check_pwned_api(password):
 limiter = Limiter(get_remote_address, app=app)
 #added to stop Dos
 @app.route('/analyze', methods=['POST'])
-@limiter.limit("5 per minute")
+@limiter.limit("240 per minute")
 def analyze_password():
     data = request.get_json()
     user_password = data.get('password', '')
