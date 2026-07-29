@@ -1,4 +1,4 @@
-#Thomas.D.M built, UTSA Freshman summer 2026
+#Thomas.D.M built, UTSA Freshman summer 2026 
 
 #import
 from flask import Flask, request, jsonify
@@ -99,7 +99,14 @@ def analyze_password():
     for word in banned_passwords:
       if word in user_password.lower():
          logging.warning("Check failed. Reason: Local list match.")
-         return jsonify({ "status": "rejected", "message": "REJECTED: Common word or phrase present."})
+         local_leak_count = check_pwned_api(user_password)
+         if local_leak_count > 0:
+            return jsonify({
+               "status": "pwned",
+               "message": f"REJECTED: Local blacklist match! Exposed {local_leak_count:,} times online!"
+            })
+         else:
+            return jsonify({ "status": "pwned", "message": "REJECTED: Common banned word or phrase present."})
        
     # Stops Further Checks If Banned
     leak_count = check_pwned_api(user_password)
