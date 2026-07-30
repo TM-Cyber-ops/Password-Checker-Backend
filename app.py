@@ -6,6 +6,7 @@ from flask_cors import CORS
 from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
 import zxcvbn
+from difflib import SequenceMatcher
 # SHA-1 
 import hashlib
 # API connect
@@ -97,16 +98,23 @@ def analyze_password():
        logging.warning("banned.txt file not found. Basic Error list used.")
     ### Hard Stop - Ban Check
     for word in banned_passwords:
-      if word in user_password.lower():
-         logging.warning("Check failed. Reason: Local list match.")
-         local_leak_count = check_pwned_api(user_password)
+      if len(word) < 3:
+          continue
+      if user_password.lower() == word:
+         local_leak_count = chechk_pwned_api(user_password)
          if local_leak_count > 0:
-            return jsonify({
-               "status": "pwned",
-               "message": f"REJECTED: Local blacklist match! Exposed {local_leak_count:,} times online!"
-            })
+         logging.warning("Check failed. Reason: Local list match.")
+            return jsonify({ "status": "pwned", "message": f"REJECTED: Local blacklist match! Exposed {local_leak_count:,} times online!"})
          else:
-            return jsonify({ "status": "pwned", "message": "REJECTED: Common banned word or phrase present."})
+            return jsonify({ "status": "pwned", "message": "REJECTED: Common banned word or phrase match."})
+      if word in user_password.lower():
+         similarity_ratio = len(word) / len(user_password)
+         if similarity_ratio >= 0.60:
+            logging.warning(f"Check faild. Reason: banned word dominant profile ({round(similarity_ratio * 100)}% Match.")
+            local_leak_count = check_pwned_api(user_password)
+            return jsonify({ "pwned", "message": f"REJECTED: Common phrase present! Leaked {local_leak_count:,} times"})
+         else:
+            return jsonify({ "status": "pwned", "message": "REJECTED: Over 60% of the entered password consists of blacklisted word."})
        
     # Stops Further Checks If Banned
     leak_count = check_pwned_api(user_password)
