@@ -96,21 +96,24 @@ def analyze_password():
     except FileNotFoundError:
        banned_passwords = ["12345678", "password", "admin", "123456", "1234", "qwerty"]
        logging.warning("banned.txt file not found. Basic Error list used.")
+
     ### Hard Stop - Ban Check
     for word in banned_passwords:
-      if len(word) < 3:
+      word = word.strip().lower()
+      if not word or len(word) < 3:
           continue
       
       if user_password.lower() == word:
          local_leak_count = check_pwned_api(user_password)
          if local_leak_count > 0:
             logging.warning("Check failed. Reason: Local list match.")
-            return jsonify({ "status": "pwned", "message": f"REJECTED: Local blacklist match! Exposed {local_leak_count:,} times online!"})
+            return jsonify({ "status": "pwned", "message": f"REJECTED: Common banned word or phrase match! Exposed {local_leak_count:,} times online!"})
       else:
             return jsonify({ "status": "pwned", "message": "REJECTED: Common banned word or phrase match."})
    
       if word in user_password.lower():
          similarity_ratio = len(word) / len(user_password)
+         
          if similarity_ratio >= 0.60:
             logging.warning(f"Check faild. Reason: banned word dominant profile ({round(similarity_ratio * 100)}% Match.")
             local_leak_count = check_pwned_api(user_password)
