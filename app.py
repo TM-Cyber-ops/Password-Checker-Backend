@@ -100,19 +100,21 @@ def analyze_password():
     for word in banned_passwords:
       if len(word) < 3:
           continue
+      
       if user_password.lower() == word:
-         local_leak_count = chechk_pwned_api(user_password)
+         local_leak_count = check_pwned_api(user_password)
          if local_leak_count > 0:
-         logging.warning("Check failed. Reason: Local list match.")
+            logging.warning("Check failed. Reason: Local list match.")
             return jsonify({ "status": "pwned", "message": f"REJECTED: Local blacklist match! Exposed {local_leak_count:,} times online!"})
-         else:
+      else:
             return jsonify({ "status": "pwned", "message": "REJECTED: Common banned word or phrase match."})
+   
       if word in user_password.lower():
          similarity_ratio = len(word) / len(user_password)
          if similarity_ratio >= 0.60:
             logging.warning(f"Check faild. Reason: banned word dominant profile ({round(similarity_ratio * 100)}% Match.")
             local_leak_count = check_pwned_api(user_password)
-            return jsonify({ "pwned", "message": f"REJECTED: Common phrase present! Leaked {local_leak_count:,} times"})
+            return jsonify({ "status": "pwned", "message": f"REJECTED: Common phrase present! Leaked {local_leak_count:,} times."})
          else:
             return jsonify({ "status": "pwned", "message": "REJECTED: Over 60% of the entered password consists of blacklisted word."})
        
