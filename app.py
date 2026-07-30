@@ -113,13 +113,11 @@ def analyze_password():
    
       if word in user_password.lower():
          similarity_ratio = len(word) / len(user_password)
-         
+
          if similarity_ratio >= 0.60:
             logging.warning(f"Check faild. Reason: banned word dominant profile ({round(similarity_ratio * 100)}% Match.")
             local_leak_count = check_pwned_api(user_password)
             return jsonify({ "status": "pwned", "message": f"REJECTED: Common phrase present! Leaked {local_leak_count:,} times."})
-         else:
-            return jsonify({ "status": "pwned", "message": "REJECTED: Over 60% of the entered password consists of blacklisted word."})
        
     # Stops Further Checks If Banned
     leak_count = check_pwned_api(user_password)
