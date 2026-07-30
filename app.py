@@ -6,6 +6,7 @@ from flask_cors import CORS
 from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
 import zxcvbn
+from flask import request
 from difflib import SequenceMatcher
 # SHA-1 
 import hashlib
@@ -16,6 +17,7 @@ import datetime
 import logging
 from logging.handlers import RotatingFileHandler
 import math
+import sys
 import threading
 import os
 
@@ -28,13 +30,29 @@ log_handler = RotatingFileHandler(
    maxBytes=1024*1024,
    backupCount= 5
 )
+log_handler.setLevel(logging.INFO)
+console_handler = logging.StreamHandler(sys.stderr)
+console_handler.setLevel(logging.ERROR)
+def announce_rotation():
+   sys.stderr.write("\n [SYSTEM NOTICE] security_audit.log limit reached. Rolling log files.\n\n")
+   sys.stderr.flush()
+log_handler.doRollover = lambda old_rollover=log_handler.doRollover: (old_rollover(), announce_rotation())
 #Log file, *No passwords logged*
 logging.basicConfig(
    level=logging.INFO,
    format='%(asctime)s - %(levelname)s - %(message)s',
-   handlers=[log_handler]
+   handlers=[log_handler, console_handler]
 )
 debounce_timer = None
+try:
+   with open('banned.txt', 'r') as f:
+      banned_memory_set = set(line.strip().lower() for line in f if line.strip())
+except FileNotFoundError:
+   backup_list = ["12345678", "password", "admin", "123456", "1234", "qwerty"]
+   banned_memory_set = set(backup_list)
+   logging.warning(f"WARNING: banned.txt file was not found! Server starting with basic backup list.")
+   print("WARNING: banned.txt file was not found! Server starting with basic backup list")
+   
 
 #API Connection Thingamabober - complicated work, dont touch
 def check_pwned_api(password):
@@ -58,11 +76,24 @@ def check_pwned_api(password):
          return int(count) #Not so fun Times Leaked
       
    return 0 #no match
-   
-limiter = Limiter(get_remote_address, app=app)
+
 #added to stop Dos
+def get_true_client_ip():
+   
+   if request.headers.getlist("X-Forwarded-For"):
+      return request.headers.getlist("X-Forwarded-For")[0]
+   return request.remote_addr
+
+limiter = Limiter(
+   app=app, 
+   key_func=get_true_client_ip, 
+   storage_uri="memory://"
+)
+
 @app.route('/analyze', methods=['POST'])
 @limiter.limit("240 per minute")
+
+
 def analyze_password():
     data = request.get_json()
     user_password = data.get('password', '')
@@ -88,26 +119,17 @@ def analyze_password():
              "message": f"REJECTED: Character '{char}' is not allowed! Use letters, numbers, or: {special_symbols}"
           })
 
-    #Banned Password - local txt list (kinda redudent but ok)
+    #Banned Password - local txt list (kinda redudent but its ok)
     banned_passwords = []
-    try:
-       with open('banned.txt','r', encoding='utf-8') as f:
-          banned_passwords = [line.strip().lower() for line in f if line.strip()]
-    except FileNotFoundError:
-       banned_passwords = ["12345678", "password", "admin", "123456", "1234", "qwerty"]
-       logging.warning("banned.txt file not found. Basic Error list used.")
-
-    ### Hard Stop - Ban Check
-    
 
     ### Hard Stop - Ban Check
     user_pass_lower = user_password.lower()
    ##Issue was here, now only matches at 100% for ban lsit
    #Had it trying to stop if more than 60% of the password was in the ban list but that failed
-    if user_pass_lower in banned_passwords:
+    if user_pass_lower in banned_memory_set:
         local_leak_count = check_pwned_api(user_password)
         if local_leak_count > 0:
-            logging.warning(f"Check failed. Reason: Exact local list match for '{user_pass_lower}'")
+            logging.warning(f"Check failed. Reason: Local ban list match")
             return jsonify({ 
                 "status": "pwned", 
                 "message": f"REJECTED: Common banned word or phrase match! Exposed {local_leak_count:,} times online!"
