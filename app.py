@@ -98,27 +98,26 @@ def analyze_password():
        logging.warning("banned.txt file not found. Basic Error list used.")
 
     ### Hard Stop - Ban Check
-    for word in banned_passwords:
-      word = word.strip().lower()
-      if not word or len(word) < 3:
-          continue
-      
-      if user_password.lower() == word:
-         local_leak_count = check_pwned_api(user_password)
-         if local_leak_count > 0:
-            logging.warning("Check failed. Reason: Local list match.")
-            return jsonify({ "status": "pwned", "message": f"REJECTED: Common banned word or phrase match! Exposed {local_leak_count:,} times online!"})
-      else:
-            return jsonify({ "status": "pwned", "message": "REJECTED: Common banned word or phrase match."})
-   
-      if word in user_password.lower():
-         similarity_ratio = len(word) / len(user_password)
+    
 
-         if similarity_ratio >= 0.60:
-            logging.warning(f"Check faild. Reason: banned word dominant profile ({round(similarity_ratio * 100)}% Match.")
-            local_leak_count = check_pwned_api(user_password)
-            return jsonify({ "status": "pwned", "message": f"REJECTED: Common phrase present! Leaked {local_leak_count:,} times."})
-       
+    ### Hard Stop - Ban Check
+    user_pass_lower = user_password.lower()
+   ##Issue was here, now only matches at 100% for ban lsit
+   #Had it trying to stop if more than 60% of the password was in the ban list but that failed
+    if user_pass_lower in banned_passwords:
+        local_leak_count = check_pwned_api(user_password)
+        if local_leak_count > 0:
+            logging.warning(f"Check failed. Reason: Exact local list match for '{user_pass_lower}'")
+            return jsonify({ 
+                "status": "pwned", 
+                "message": f"REJECTED: Common banned word or phrase match! Exposed {local_leak_count:,} times online!"
+            })
+        else:
+            return jsonify({ 
+                "status": "pwned", 
+                "message": "REJECTED: Common banned word or phrase match."
+            })
+
     # Stops Further Checks If Banned
     leak_count = check_pwned_api(user_password)
     if leak_count > 0:
