@@ -22,6 +22,11 @@ The application enforces automated data-minimization perimeters across six disti
 *   **Hashed Blacklist Memory State:** The local common-word dictionary (`banned.txt`) is compiled directly into full 40-character SHA-1 mathematical tokens instantly on server boot. No plaintext password registry exists at rest within the system files.
 *   **Ephemeral RAM Lifecycle:** Raw text string processing variables function under a strict ephemeral scope. They are manually overwritten with zero-byte strings (`"0" * len`) and explicitly purged from RAM execution blocks within milliseconds of calculation completion.
 *   **Forensic Auditing Restrictions:** A multi-tier `RotatingFileHandler` captures system anomalies, performance telemetry, and entropy bit levels up to a 5MB storage ceiling, while strictly blocking raw credential metrics from committing to disk files.
+*   **Fault-Isolated Dependency Loading:** The startup sequence features crash defense. If the local dictionary file database is corrupted or missing on boot, the script catches the exception, loads an isolated hardcoded array backup, and preserves system uptime.
+*   **Cross-Origin Isolation (CORS):** Synchronous origin interception prevents third-party malicious scripts or unauthorized external domains from scraping or hijacking your raw backend API endpoints.
+*   **Algorithmic Matrix Short-Circuiting:** Blacklisted strings are dropped at the perimeter. This prevents automated attackers from launching a CPU exhaustion denial of service by forcing the server to calculate zxcvbn patterns on strings already rejected.
+
+
 
 ---
 
