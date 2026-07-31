@@ -46,12 +46,18 @@ logging.basicConfig(
 debounce_timer = None
 try:
    with open('banned.txt', 'r') as f:
-      banned_memory_set = set(line.strip().lower() for line in f if line.strip())
+       banned_memory_set = set(
+         hashlib.sha1(line.strip().lower().encode('utf-8')).hexdigest().upper()
+         for line in f if line.strip()
+       )
 except FileNotFoundError:
    backup_list = ["12345678", "password", "admin", "123456", "1234", "qwerty"]
-   banned_memory_set = set(backup_list)
-   logging.warning(f"WARNING: banned.txt file was not found! Server starting with basic backup list.")
-   print("WARNING: banned.txt file was not found! Server starting with basic backup list")
+   banned_memory_set = set(
+      hashlib.sha1(word.encode('utf-8')).hexdigest().upper()
+      for word in backup_list
+   )
+   logging.error(f"ERROR: banned.txt file was not found! Server starting with basic backup list.")
+   print("ERROR: banned.txt file was not found! Server starting with basic backup list")
    
 
 #API Connection Thingamabober - complicated work, dont touch
@@ -93,7 +99,7 @@ limiter = Limiter(
 @app.route('/analyze', methods=['POST'])
 @limiter.limit("240 per minute")
 
-
+#checks passwords
 def analyze_password():
     data = request.get_json()
     user_password = data.get('password', '')
@@ -124,6 +130,7 @@ def analyze_password():
 
     ### Hard Stop - Ban Check
     user_pass_lower = user_password.lower()
+    user_pass_hash = hashlib.sha1(user_pass_lower.encode('utf-8')).hexdigest().upper()
    ##Issue was here, now only matches at 100% for ban lsit
    #Had it trying to stop if more than 60% of the password was in the ban list but that failed
     if user_pass_lower in banned_memory_set:
@@ -210,6 +217,9 @@ def analyze_password():
         color = "red"
 
     logging.info(f"Hard Math Completed. Entropy: {entropy_bits} bits")
+
+    user_password = "0" * len(user_password)
+    del user_password
 
     return jsonify({
        "status": "safe",
