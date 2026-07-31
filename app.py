@@ -138,7 +138,7 @@ def analyze_password():
     user_pass_hash = hashlib.sha1(user_pass_lower.encode('utf-8')).hexdigest().upper()
    ##Issue was here, now only matches at 100% for ban lsit
    #Had it trying to stop if more than 60% of the password was in the ban list but that failed
-    if user_pass_lower in banned_memory_set:
+    if user_pass_hash in banned_memory_set:
         local_leak_count = check_pwned_api(user_password)
         if local_leak_count > 0:
             logging.warning(f"Check failed. Reason: Local ban list match")
