@@ -83,7 +83,7 @@ def check_pwned_api(password):
       
    return 0 #no match
 
-#added to stop Dos
+#added to stop Dos, every decvice has its own limit
 def get_true_client_ip():
    
    if request.headers.getlist("X-Forwarded-For"):
@@ -95,11 +95,10 @@ limiter = Limiter(
    key_func=get_true_client_ip, 
    storage_uri="memory://"
 )
-
 @app.route('/analyze', methods=['POST'])
 @limiter.limit("240 per minute")
 
-#checks passwords
+#checks passwords, this is core code for program, see how passwords are treated below
 def analyze_password():
     data = request.get_json()
     incoming_payload = data.get('password', '')
@@ -208,21 +207,28 @@ def analyze_password():
        combinations_string = "infinity"
 
     #GPU guess speed
-    time_text = z_eval['crack_times_display']['offline_fast_hashing_1e10_per_second']
-    #Strength tiers
-    if "century" in time_text.lower() or "centuries" in time_text.lower():
+    display_times = z_eval['crack_times_display']
+    #Different speed settings
+    time_offline_fast = display_times['offline_fast_hashing_1e10_per_second']
+    time_offline_slow = display_times['offline_slow_hashing_1e4_per_second']
+    time_online_unthrottled = display_times['online_no_throttling_10_per_second']
+    time_online_throttled = display_times['online_throttling_100_per_hour']
+
+    # Keep your exact color-grading logic hooked onto the worst-case offline vector
+    if "century" in time_offline_fast.lower() or "centuries" in time_offline_fast.lower():
         color = "green"
-    elif "year" in time_text.lower() or "month" in time_text.lower():
+    elif "year" in time_offline_fast.lower() or "month" in time_offline_fast.lower():
         color = "darkgreen"
-    elif "day" in time_text.lower() or "week" in time_text.lower():
+    elif "day" in time_offline_fast.lower() or "week" in time_offline_fast.lower():
         color = "blue"
-    elif "hour" in time_text.lower() or "minute" in time_text.lower():
+    elif "hour" in time_offline_fast.lower() or "minute" in time_offline_fast.lower():
         color = "orange"
     else:
         color = "red"
 
     logging.info(f"Hard Math Completed. Entropy: {entropy_bits} bits")
 
+    #Overwrite plaintext string in memory right before returning data
     user_password = "0" * len(user_password)
     del user_password
 
@@ -235,11 +241,20 @@ def analyze_password():
        "pool_used": " + ".join(pool_descriptions),
        "patterns_flagged": " | ".join(pattern_logs) if pattern_logs else "None Detected",
        "combinations": combinations_string,
-       "crack_time": time_text
+       "crack_time": time_offline_fast,
+       "time_offline_slow": time_offline_slow,
+       "time_online_unthrottled": time_online_unthrottled,
+       "time_online_throttled": time_online_throttled
     })
-
 if __name__ == '__main__':
-   blind_port = int(os.environ.get("PORT", 5000))
-   app.run(host="0.0.0.0", port=blind_port)
-
+    print("=" * 70)
+    print("   🛡️  CRYPTOGRAPHIC EVALUATION ENGINE V1.8 ACTIVATED  🛡️")
+    print("   🚀 Built & Engineered by: Thomas D. Manning (2026)")
+    print("   🔒 Infrastructure Status: Zero-Trust Security Perimeter Live")
+    print("=" * 70)
+    sys.stdout.flush()
+    #emojis are cool
+    blind_port = int(os.environ.get("PORT", 5000))
+    app.run(host="0.0.0.0", port=blind_port)
+    
 ###IMPORTANT: Always end on a line divisible by 5 
