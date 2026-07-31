@@ -20,7 +20,7 @@ import math
 import sys
 import threading
 import os
-
+import base64
 
 app = Flask(__name__)
 CORS(app)
@@ -102,9 +102,14 @@ limiter = Limiter(
 #checks passwords
 def analyze_password():
     data = request.get_json()
-    user_password = data.get('password', '')
+    incoming_payload = data.get('password', '')
+    try:
+       user_password = base64.b64decode(incoming_payload.encode('utf-8')).decode('utf-8')
+    except Exception:
+       user_password = incoming_payload
+    
     password_length = len(user_password)
-
+    
     if not user_password:
       return jsonify({"status": "empty", "message": "Enter a password above to begin analysis."})
 
@@ -133,7 +138,7 @@ def analyze_password():
     user_pass_hash = hashlib.sha1(user_pass_lower.encode('utf-8')).hexdigest().upper()
    ##Issue was here, now only matches at 100% for ban lsit
    #Had it trying to stop if more than 60% of the password was in the ban list but that failed
-    if user_pass_hash in banned_memory_set:
+    if user_pass_lower in banned_memory_set:
         local_leak_count = check_pwned_api(user_password)
         if local_leak_count > 0:
             logging.warning(f"Check failed. Reason: Local ban list match")
@@ -236,3 +241,5 @@ def analyze_password():
 if __name__ == '__main__':
    blind_port = int(os.environ.get("PORT", 5000))
    app.run(host="0.0.0.0", port=blind_port)
+
+###IMPORTANT: Always end on a line divisible by 5 
