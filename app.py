@@ -1,6 +1,6 @@
 #Thomas.D.M built, UTSA Freshman summer 2026 
 
-#import
+#imports
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 from flask_limiter import Limiter
@@ -70,10 +70,8 @@ def check_pwned_api(password):
       response = requests.get(url, timeout=5)
       if response.status_code != 200:
         return 0
-
    except requests.exceptions.RequestException:
       return 0
-   
    for line in response.text.splitlines():
       api_suffix, count = line.split(':')
       if api_suffix == suffix:
@@ -86,7 +84,6 @@ def get_true_client_ip():
    if request.headers.getlist("X-Forwarded-For"):
       return request.headers.getlist("X-Forwarded-For")[0]
    return request.remote_addr
-
 limiter = Limiter(
    app=app, 
    key_func=get_true_client_ip, 
@@ -100,12 +97,13 @@ def analyze_password():
     data = request.get_json()
     incoming_payload = data.get('password', '')
     try:
-       user_password = base64.b64decode(incoming_payload.encode('utf-8')).decode('utf-8')
+       decoded_str = base64.b64decode(incoming_payload.encode('utf-8')).decode('utf-8')
     except Exception:
-       user_password = incoming_payload
-    
+       decoded_str = incoming_payload
+    user_password_bytes = bytearray(decoded_str.encode('utf-8'))
+    user_password = user_password_bytes.decode('utf-8')
+
     password_length = len(user_password)
-    
     if not user_password:
       return jsonify({"status": "empty", "message": "Enter a password above to begin analysis."})
 
@@ -124,15 +122,12 @@ def analyze_password():
              "status": "rejected",
              "message": f"REJECTED: Character '{char}' is not allowed! Use letters, numbers, or: {special_symbols}"
           })
-
     #Banned Password - local txt list (kinda redudent but its ok)
     banned_passwords = []
-
     ### Hard Stop - Ban Check
     user_pass_lower = user_password.lower()
     user_pass_hash = hashlib.sha1(user_pass_lower.encode('utf-8')).hexdigest().upper()
-   ##Issue was here, now only matches at 100% for ban lsit
-   #Had it trying to stop if more than 60% of the password was in the ban list but that failed
+    #Issue was here, now only matches at 100% for ban lsit, Had it trying to stop if more than 60% of the password was in the ban list but that failed
     if user_pass_hash in banned_memory_set:
         local_leak_count = check_pwned_api(user_password)
         if local_leak_count > 0:
@@ -146,7 +141,6 @@ def analyze_password():
                 "status": "pwned", 
                 "message": "REJECTED: Common banned word or phrase match."
             })
-
     # Stops Further Checks If Banned
     leak_count = check_pwned_api(user_password)
     if leak_count > 0:
@@ -159,7 +153,6 @@ def analyze_password():
     #Math heavy part - Be careful touching, A lot of work if it breaks
     pool_size = 0
     pool_descriptions = []
-
     if has_lower:
         pool_size +=26
         pool_descriptions.append("Lowercase (26)")
@@ -172,12 +165,10 @@ def analyze_password():
     if has_symbol:
         pool_size += 33
         pool_descriptions.append("Symbols (33)")
-
     z_eval = zxcvbn.zxcvbn(user_password)
     pattern_logs = []
     raw_entropy = password_length * math.log2(pool_size) if pool_size > 0 else 0
     working_entropy = raw_entropy
-
     for match in z_eval.get('sequence',[]):
         p_type = match.get('pattern')
         token = match.get('token')
@@ -193,7 +184,6 @@ def analyze_password():
         elif p_type == 'dictionary':
            working_entropy *= 0.70
            pattern_logs.append(f"Log: Dictionary Word [{token}] (-30% Bits)")
-
     entropy_bits = round(max(0,working_entropy), 1)
     #Unique Combo's
     try:
@@ -201,16 +191,13 @@ def analyze_password():
        combinations_string = f"{total_combinations_raw:.2e}"
     except (ValueError, OverflowError):
        combinations_string = "infinity"
-
-    #GPU guess speed
     display_times = z_eval['crack_times_display']
-    #Different speed settings
+    #Different speed settings 
     time_offline_fast = display_times['offline_fast_hashing_1e10_per_second']
     time_offline_slow = display_times['offline_slow_hashing_1e4_per_second']
     time_online_unthrottled = display_times['online_no_throttling_10_per_second']
     time_online_throttled = display_times['online_throttling_100_per_hour']
-
-    # Keep your exact color-grading logic hooked onto the worst-case offline vector
+    #Different colors for time to crack based on worst case
     if "century" in time_offline_fast.lower() or "centuries" in time_offline_fast.lower():
         color = "green"
     elif "year" in time_offline_fast.lower() or "month" in time_offline_fast.lower():
@@ -221,13 +208,11 @@ def analyze_password():
         color = "orange"
     else:
         color = "red"
-
     logging.info(f"Hard Math Completed. Entropy: {entropy_bits} bits")
-
-    #Overwrite plaintext string in memory right before returning data
-    user_password = "0" * len(user_password)
-    del user_password
-
+    #this wipes passwords from the ram
+    for i in range(len(user_password_bytes)):
+        user_password_bytes[i] = 0
+    del user_password_bytes
     return jsonify({
        "status": "safe",
        "color": color,
