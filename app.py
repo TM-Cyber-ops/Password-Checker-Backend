@@ -59,11 +59,9 @@ except FileNotFoundError:
    logging.error(f"ERROR: banned.txt file was not found! Server starting with basic backup list.")
    print("ERROR: banned.txt file was not found! Server starting with basic backup list")
    
-
 #API Connection Thingamabober - complicated work, dont touch
 def check_pwned_api(password):
    sha1_hash = hashlib.sha1(password.encode('utf-8')).hexdigest().upper()
-
    prefix = sha1_hash[:5]
    suffix = sha1_hash[5:]
    url = f"https://api.pwnedpasswords.com/range/{prefix}"
@@ -79,8 +77,7 @@ def check_pwned_api(password):
    for line in response.text.splitlines():
       api_suffix, count = line.split(':')
       if api_suffix == suffix:
-         return int(count) #Not so fun Times Leaked
-      
+         return int(count) #Not so fun Times Leaked  
    return 0 #no match
 
 #added to stop Dos, every decvice has its own limit
@@ -113,14 +110,13 @@ def analyze_password():
       return jsonify({"status": "empty", "message": "Enter a password above to begin analysis."})
 
     #Level 0 rule set - Variables
-    special_symbols = "!@#$%&*?_"
+    special_symbols = " !\"#$%&'()*+,-./:;<=>?@[\\]^_`{|}~"
     allowed_characters = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890" + special_symbols
     has_upper = any(c.isupper() for c in user_password)
     has_lower = any(c.islower() for c in user_password)
     has_digit = any(c.isdigit() for c in user_password)
     has_symbol = any(c in special_symbols for c in user_password)
     
-
     for char in user_password:
        if char not in allowed_characters:
           logging.warning(f"Check failed. Reason: Illegal Character usage.")
@@ -174,8 +170,8 @@ def analyze_password():
         pool_size += 10
         pool_descriptions.append("Numbers (10)")
     if has_symbol:
-        pool_size += 9
-        pool_descriptions.append("Symbols (9)")
+        pool_size += 33
+        pool_descriptions.append("Symbols (33)")
 
     z_eval = zxcvbn.zxcvbn(user_password)
     pattern_logs = []
@@ -256,5 +252,4 @@ if __name__ == '__main__':
     #emojis are cool
     blind_port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=blind_port)
-    
-###IMPORTANT: Always end on a line divisible by 5 
+    ###IMPORTANT: Always end on a line divisible by 5 
