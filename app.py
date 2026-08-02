@@ -230,7 +230,7 @@ def analyze_password():
 if __name__ == '__main__':
     print("=" * 70)
     print("   🛡️  CRYPTOGRAPHIC EVALUATION ENGINE V1.8 ACTIVATED  🛡️")
-    print("   🚀 Built & Engineered by: Thomas D. Manning (2026)")
+    print("   🚀 Built & Engineered by: TM-Cyber-ops (2026)")
     print("   🔒 Infrastructure Status: Zero-Trust Security Perimeter Live")
     print("=" * 70)
     sys.stdout.flush()
