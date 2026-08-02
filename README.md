@@ -50,4 +50,4 @@ The application enforces automated data-minimization perimeters across six disti
 
 Distributed under the MIT License. See `LICENSE` for more information.
 
-Copyright © 2026 Thomas D Manning. All Rights Reserved.  
+Copyright © 2026 TM-Cyber-ops. All Rights Reserved.  
