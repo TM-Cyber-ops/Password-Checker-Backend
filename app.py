@@ -8,11 +8,8 @@ from flask_limiter.util import get_remote_address
 import zxcvbn
 from flask import request
 from difflib import SequenceMatcher
-# SHA-1 
 import hashlib
-# API connect
 import requests 
-#Logging imports
 import datetime
 import logging
 from logging.handlers import RotatingFileHandler
@@ -21,6 +18,7 @@ import sys
 import threading
 import os
 import base64
+import gc
 
 app = Flask(__name__)
 CORS(app)
@@ -213,6 +211,8 @@ def analyze_password():
     for i in range(len(user_password_bytes)):
         user_password_bytes[i] = 0
     del user_password_bytes
+    user_password = ""
+    gc.collect()
     return jsonify({
        "status": "safe",
        "color": color,
