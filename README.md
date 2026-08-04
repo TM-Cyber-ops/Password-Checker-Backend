@@ -40,8 +40,8 @@ The application enforces automated data-minimization perimeters across six disti
 
 ## 🛠️ Technology Stack & Optimization
 
-*   **Frontend Footprint:** ~24.9 KB in code (HTML5, CSS3 Custom CSS Grid, Asynchronous Vanilla JavaScript, A Image)
-*   **Backend Footprint:** ~9.57 KB in code (Python, Flask, Flask-CORS, Flask-Limiter, zxcvbn-python, local ban lsit)
+*   **Frontend Footprint:** ~25.09 KB in code (HTML5, CSS3 Custom CSS Grid, Asynchronous Vanilla JavaScript, A Image)
+*   **Backend Footprint:** ~9.70 KB in code (Python, Flask, Flask-CORS, Flask-Limiter, zxcvbn-python, local ban lsit)
 *   **Performance Engine:** High-performance Python `set` tracking loops enabling sub-millisecond local match times.
  
 ---
