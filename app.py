@@ -109,7 +109,7 @@ def analyze_password():
           return jsonify({
              "status": "rejected",
              "message": f"REJECTED: Character '{bad_character}' is not allowed! Use letters, numbers, or: SPACE ! \" # $ % & ' ( ) * + , - . / : ; < = > ? @ [ \ \ ] ^ _ ` {{ | }} ~ "
-          }), 400
+          }),
     
     ###NOTE: Hard Stop - Ban Checks here
     #FIX: Issue was here, now only matches at 100% for ban list, Had it trying to stop if more than 60% of the password was in the ban list but that failed.
