@@ -83,7 +83,7 @@ limiter = Limiter(
    storage_uri=REDIS_URL
 )
 @app.route('/analyze', methods=['POST'])
-@limiter.limit("240 per minute")
+@limiter.limit("100 per minute")
 
 #NOTE:checks passwords, this is core code for program, see how passwords are treated below
 def analyze_password():
