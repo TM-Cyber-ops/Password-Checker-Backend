@@ -48,7 +48,7 @@ The application enforces automated data-minimization perimeters across six disti
 ## 🛠️ Technology Stack & Optimization
 
 *   **Frontend Footprint**: ~25.93 KB in code (HTML5, CSS3 Custom CSS Grid, Asynchronous Vanilla JavaScript, Asset-Free Layout Camouflage)
-*   **Backend Footprint**: ~9.72 KB runtime package size (Python, Flask, Flask-CORS, Flask-Limiter, Upstash Redis, zxcvbn-python)
+*   **Backend Footprint**: ~9.72 KB in code runtime package size (Python, Flask, Flask-CORS, Flask-Limiter, Upstash Redis, zxcvbn-python)
 *   **Performance Engine**: High-performance Python set tracking loops combined with remote Redis in-memory lookup pipelines, enabling sub-millisecond local match times and elastic horizontal scalability.
 
  
