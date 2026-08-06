@@ -30,7 +30,7 @@ def announce_rotation():
    sys.stderr.write("\n [SYSTEM NOTICE] security_audit.log limit reached. Rolling log files.\n\n")
    sys.stderr.flush()
 log_handler.doRollover = lambda old_rollover=log_handler.doRollover: (old_rollover(), announce_rotation())
- #Log file, *No passwords logged*
+#NOTE: Log file, *No passwords logged*
 logging.basicConfig( 
    level=logging.INFO,
    format='%(asctime)s - %(levelname)s - %(message)s',
@@ -70,15 +70,17 @@ def check_pwned_api(user_password_bytes):
          return int(count) #Not so fun Times Leaked  
    return 0
 
-#NOTE:added to stop Dos, every decvice has its own limit
+#NOTE:added to stop Dos, every decvice has its own limit, added REDIS for scalability
 def get_true_client_ip():
-   if request.headers.getlist("X-Forwarded-For"):
-      return request.headers.getlist("X-Forwarded-For")[0]
+   forwarded = request.headers.getlist("X-Forwarded-For")
+   if forwarded:
+      return forwarded[0]
    return request.remote_addr
+REDIS_URL = os.environ.get("REDIS_URL", "memory://")
 limiter = Limiter(
    app=app, 
    key_func=get_true_client_ip, 
-   storage_uri="memory://"
+   storage_uri=REDIS_URL
 )
 @app.route('/analyze', methods=['POST'])
 @limiter.limit("240 per minute")
@@ -107,8 +109,7 @@ def analyze_password():
           logging.warning(f"Check failed. Reason: Illegal Character usage.")
           bad_character = chr(b)
           return jsonify({
-             "status": "rejected",
-             "message": f"REJECTED: Character '{bad_character}' is not allowed! Use letters, numbers, or: SPACE ! \" # $ % & ' ( ) * + , - . / : ; < = > ? @ [ \ \ ] ^ _ ` {{ | }} ~ "
+             "status": "rejected", "message": f"REJECTED: Character '{bad_character}' is not allowed! Use letters, numbers, or: SPACE ! \" # $ % & ' ( ) * + , - . / : ; < = > ? @ [ \ \ ] ^ _ ` {{ | }} ~ "
           }),
     
     ###NOTE: Hard Stop - Ban Checks here
@@ -118,21 +119,18 @@ def analyze_password():
         if local_ban_count > 0:
             logging.warning(f"Check failed. Reason: Local ban list match")
             return jsonify({ 
-                "status": "pwned", 
-                "message": f"REJECTED: Common banned word or phrase match! Exposed {local_ban_count:,} times online!"
+                "status": "pwned", "message": f"REJECTED: Common banned word or phrase match! Exposed {local_ban_count:,} times online!"
             })
         else:
             return jsonify({ 
-                "status": "pwned", 
-                "message": "REJECTED: Common banned word or phrase match."
+                "status": "pwned", "message": "REJECTED: Common banned word or phrase match."
             })
     #NOTE: Stops Further Checks If Leaked
     leak_count = check_pwned_api(user_password_bytes)
     if leak_count > 0:
      logging.warning(f"Check failed. Reason: Leaked password database match. Count: {leak_count}")
      return jsonify({
-        "status": "pwned",
-        "message": f"REJECTED: Exposed {leak_count:,} times online!"
+        "status": "pwned", "message": f"REJECTED: Exposed {leak_count:,} times online!"
      })
     
     #NOTE:Math heavy part - Be careful touching, A lot of work if it breaks
@@ -227,4 +225,6 @@ if __name__ == '__main__':
     sys.stdout.flush()
     blind_port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=blind_port)
+
+
     ###IMPORTANT: Always end on a line divisible by 5 
