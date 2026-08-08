@@ -72,14 +72,17 @@ def check_pwned_api(user_password_bytes):
 
 #NOTE:added to stop Dos, every decvice has its own limit, added REDIS for scalability
 def get_true_client_ip():
-   forwarded = request.headers.getlist("X-Forwarded-For")
-   if forwarded:
-      return forwarded[0]
-   return request.remote_addr
+    session_token = request.headers.get("X-Session-Token")
+    if session_token:
+        return session_token.strip()
+    forwarded = request.headers.getlist("X-Forwarded-For")
+    if forwarded:
+        return forwarded[0]
+    return request.remote_addr
 REDIS_URL = os.environ.get("REDIS_URL", "memory://")
 limiter = Limiter(
-   app=app, 
-   key_func=get_true_client_ip, 
+   app=app,
+   key_func=get_true_client_ip,
    storage_uri=REDIS_URL
 )
 @app.route('/analyze', methods=['POST'])
@@ -111,7 +114,6 @@ def analyze_password():
           return jsonify({
              "status": "rejected", "message": f"REJECTED: Character '{bad_character}' is not allowed! Use letters, numbers, or: SPACE ! \" # $ % & ' ( ) * + , - . / : ; < = > ? @ [ \ \ ] ^ _ ` {{ | }} ~ "
           }),
-    
     ###NOTE: Hard Stop - Ban Checks here
     #FIX: Issue was here, now only matches at 100% for ban list, Had it trying to stop if more than 60% of the password was in the ban list but that failed.
     if hashlib.sha1(user_password_bytes.decode('utf-8').encode('utf-8')).hexdigest().upper() in banned_memory_set:
@@ -225,6 +227,4 @@ if __name__ == '__main__':
     sys.stdout.flush()
     blind_port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=blind_port)
-
-
     ###IMPORTANT: Always end on a line divisible by 5 
