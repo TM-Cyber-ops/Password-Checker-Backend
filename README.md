@@ -40,6 +40,7 @@ The application enforces automated data-minimization perimeters across six disti
 *   **k-Anonymity Privacy Pipeline:** API network checks to the global *Have I Been Pwned* registry utilize a 5-character hash prefix slice. The full string or full hash of the user's password never exits the isolated microservice perimeter.
 *   **zxcvbn Heuristic Framework**: Evaluates spatial keyboard walks, sequential runs, repeat sequences, and dictionary matches across 4 independent real-time cracking scenarios, providing dynamic multi-velocity vector profiling (from Throttled Online Portals to Offline GPU Hardware Clusters).
 *   **Serverless Redis State Clustering**: Utilizes memory-optimized data structures inside a serverless Upstash instance to execute real-time, low-latency sliding window IP tracking with absolute zero infrastructure maintenance overhead.
+*   **Production WSGI Concurrency**: Enforces a single-worker, 3-threaded asymmetric *gathread* execution engine to handle real-time concurrent user spikes on resource-constrained cloud nodes without inflating the system's physical RAM footprint.
 
 
 
@@ -48,7 +49,7 @@ The application enforces automated data-minimization perimeters across six disti
 ## 🛠️ Technology Stack & Optimization
 
 *   **Frontend Footprint**: ~25.93 KB in code (HTML5, CSS3 Custom CSS Grid, Asynchronous Vanilla JavaScript, Asset-Free Layout Camouflage)
-*   **Backend Footprint**: ~9.72 KB in code runtime package size (Python, Flask, Flask-CORS, Flask-Limiter, Upstash Redis, zxcvbn-python)
+*   **Backend Footprint**: ~9.72 KB in code runtime package size (Python, Flask, Flask-CORS, Flask-Limiter, Upstash Redis, Gunicorn WSGI Container zxcvbn-python)
 *   **Performance Engine**: High-performance Python set tracking loops combined with remote Redis in-memory lookup pipelines, enabling sub-millisecond local match times and elastic horizontal scalability.
 
  
