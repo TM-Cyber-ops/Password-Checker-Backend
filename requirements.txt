@@ -4,3 +4,4 @@ zxcvbn
 requests
 flask-limiter
 redis
+gunicorn
