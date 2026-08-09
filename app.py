@@ -88,6 +88,7 @@ limiter = Limiter(
 
 #NOTE:checks passwords, this is core code for program, see how passwords are treated below
 def analyze_password():
+    global current_buffer
     raw_data = request.get_data()
     try: 
        user_password_bytes = bytearray(base64.b64decode(raw_data.split(b'"password":"')[1].split(b'"')[0]))
@@ -98,7 +99,7 @@ def analyze_password():
               return jsonify({"status": "empty", "message": "Enter a password above to begin analysis."})
     del raw_data
     password_length = len(user_password_bytes)
-      
+    current_buffer = user_password_bytes
     #NOTE:Level 0 rule set - Variables for allowed inputs
     has_upper = any(65 <= b <= 90 for b in user_password_bytes) #A-Z
     has_lower = any(97 <= b <= 122 for b in user_password_bytes) #a-z
@@ -108,7 +109,7 @@ def analyze_password():
        if any(b < 32 or b > 126 for b in user_password_bytes):
           logging.warning(f"Check failed. Reason: Illegal Character usage.")
           bad_character = chr(b)
-          return jsonify({"status": "rejected", "message": f"REJECTED: Character '{bad_character}' is not allowed! Use letters, numbers, or: SPACE ! \" # $ % & ' ( ) * + , - . / : ; < = > ? @ [ \ \ ] ^ _ ` {{ | }} ~ "})
+          return jsonify({"status": "rejected", "message": f"REJECTED: Character '{bad_character}' is not allowed! Use letters, numbers, or: SPACE ! \" # $ % & ' ( ) * + , - . / : ; < = > ? @ [ ] \\ ^ _ ` {{ | }} ~ "})
 
     ###NOTE: Hard Stop - Ban Checks here
     #FIX: Issue was here, now only matches at 100% for ban list, Had it trying to stop if more than 60% of the password was in the ban list but that failed.
@@ -183,11 +184,6 @@ def analyze_password():
     else:
         color = "red"
     logging.info(f"Hard Math Completed. Entropy: {entropy_bits} bits")
-    #NOTE:this wipes passwords from the ram
-    for i in range(len(user_password_bytes)): 
-        user_password_bytes[i] = 0
-    del user_password_bytes
-    gc.collect()
     return jsonify({
        "status": "safe",
        "color": color,
@@ -208,6 +204,15 @@ def security_settings(response):
    response.headers['X-Frame-Options'] = 'DENY'
    response.headers['X-Content-Type-Options'] = 'nosniff'
    return response
+ #NOTE:this wipes passwords from the ram
+@app.teardown_request
+def wipe_ram_on_exit(exception=None):
+    global current_buffer
+    if 'current_buffer' in globals() and current_buffer is not None:
+      for i in range(len(current_buffer)):
+         current_buffer[i] = 0x00
+      current_buffer = None
+      gc.collect()
 if __name__ == '__main__':
     print("=" * 70)
     print("   🛡️  CRYPTOGRAPHIC EVALUATION ENGINE V1.8 ACTIVATED  🛡️")
@@ -217,4 +222,4 @@ if __name__ == '__main__':
     sys.stdout.flush()
     blind_port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=blind_port)
-    ###IMPORTANT: Always end on a line divisible by 5 
+###IMPORTANT: Always end on a line divisible by 5 
