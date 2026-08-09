@@ -63,7 +63,7 @@ def check_pwned_api(user_password_bytes):
    return 0
 
 def compute_isolated_entropy(secure_buffer):
-    temp_string = secure_buffer.decode('utf-8')
+    temp_string = bytes(secure_buffer).decode('utf-8')
     score_results = zxcvbn.zxcvbn(temp_string)
     del temp_string
     return score_results
