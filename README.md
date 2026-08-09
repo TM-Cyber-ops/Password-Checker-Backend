@@ -4,8 +4,11 @@ A production-grade, decoupled full-stack cloud microservice designed to evaluate
 
 ---
 ### 🔗 Full-Stack Repository Navigation
+
 🔹 **Frontend UI Repository:** [GitHub - Frontend Code Base](https://github.com/TM-Cyber-ops/Password-Checker-Frontend)
+
 🔸 **Backend API Repository:** [GitHub - Hardened Compute Engine](https://github.com/TM-Cyber-ops/Password-Checker-Backend)
+
 🚀 **Live Production Application:** [Launch Live Passphrase Dashboard](https://tm-cyber-ops.github.io/Password-Checker-Frontend/)
 
 
