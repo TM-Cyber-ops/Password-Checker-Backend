@@ -93,7 +93,7 @@ def analyze_password():
        user_password_bytes = bytearray(base64.b64decode(raw_data.split(b'"password":"')[1].split(b'"')[0]))
     except Exception:
           try:
-             user_password_bytes = bytearray(raw_data.encode(b'"password":"')[1].split(b'"')[0])
+             user_password_bytes = bytearray(raw_data.split(b'"password":"')[1].split(b'"')[0])
           except Exception:
               return jsonify({"status": "empty", "message": "Enter a password above to begin analysis."})
     del raw_data
