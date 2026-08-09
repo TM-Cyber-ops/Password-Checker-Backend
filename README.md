@@ -3,6 +3,14 @@
 A production-grade, decoupled full-stack cloud microservice designed to evaluate credential entropy spaces, audit character matrices, and run zero-knowledge data breach cross-referencing. Built under strict **Defense in Depth** and **Zero-Trust** security parameters.
 
 ---
+### 🔗 Full-Stack Repository Navigation
+🔹 **Frontend UI Repository:** [GitHub - Frontend Code Base](https://github.com/TM-Cyber-ops/Password-Checker-Frontend)  
+🔸 **Backend API Repository:** [GitHub - Hardened Compute Engine]([https://github.com](https://github.com/TM-Cyber-ops/Password-Checker-Backend)  
+🚀 **Live Production Application:** [Launch Live Passphrase Dashboard]([https://github.io](https://tm-cyber-ops.github.io/Password-Checker-Frontend/)
+
+
+
+---
 
 ## 🚀 Systems Architecture Overview
 This ecosystem is split into independent, decoupled infrastructure layers to prevent direct runtime manipulation of the core security loops:
