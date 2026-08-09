@@ -215,7 +215,7 @@ def wipe_ram_on_exit(exception=None):
       gc.collect()
 if __name__ == '__main__':
     print("=" * 70)
-    print("   🛡️  CRYPTOGRAPHIC EVALUATION ENGINE V1.8 ACTIVATED  🛡️")
+    print("   🛡️  CRYPTOGRAPHIC EVALUATION ENGINE V2.12 ACTIVATED  🛡️")
     print("   🚀 Built & Engineered by: Thomas D. Manning (2026)")
     print("   🔒 Infrastructure Status: Zero-Trust Security Perimeter Live")
     print("=" * 70)
