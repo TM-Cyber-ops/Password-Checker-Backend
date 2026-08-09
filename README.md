@@ -1,6 +1,6 @@
  🛡️ High-Security Password Validation & Leak Microservice
 
-A production-grade, decoupled full-stack cloud microservice designed to evaluate credential entropy spaces, audit character matrices, and run zero-knowledge data breach cross-referencing. Built under strict **Defense in Depth** and **Zero-Trust** security parameters.
+A production-grade, decoupled full-stack cloud microservice designed to evaluate password strength, analyze structural complexity patterns, and run Zero-Persistence Processing. Built under strict **Defense in Depth** and **Zero-Trust** security parameters.
 
 ---
 ## 🔗 Full-Stack Repository Navigation
@@ -38,10 +38,10 @@ The application enforces automated data-minimization perimeters across six disti
 *   **Fault-Isolated Dependency Loading**: The startup sequence features crash defense. If the local dictionary file database is corrupted or missing on boot, the script catches the exception, loads an isolated hardcoded array backup, and preserves system uptime.
 *   **Cross-Origin Isolation (CORS)**: Synchronous origin interception prevents third-party malicious scripts or unauthorized external domains from scraping or hijacking your raw backend API endpoints.
 *   **Early-Exit Optimization**: Blacklisted strings are dropped at the perimeter. This prevents automated attackers from launching a CPU exhaustion denial of service by forcing the server to calculate zxcvbn patterns on strings already rejected.
-*   **Global Hardware Memory Sanitization**: Raw bytes are handled strictly via low-level mutable data structures (`bytearray`) passed dynamically through Flask's global request context (`g`). The application completely eliminates high-level immutable text-string tracking loops. Utilizing an automated framework teardown hook (`@app.teardown_request`), the system intercepts the execution lifecycle right before connection termination. It steps through the allocated memory addresses and overwrites the mutable `bytwarray` memory space with zeros to perform memory scrubbing, ensuring sensitive credential data does not linger in the application heap before garbage collection
+*   **Global Hardware Memory Sanitization**: Raw bytes are handled strictly via low-level mutable data structures (`bytearray`) passed dynamically through Flask's global request context (`g`). The application completely eliminates high-level immutable text-string tracking loops. Utilizing an automated framework teardown hook (`@app.teardown_request`), the system intercepts the execution lifecycle right before connection termination. It steps through the allocated memory addresses and overwrites the mutable `bytarray` memory space with zeros to perform memory scrubbing, ensuring sensitive credential data does not linger in the application heap before garbage collection
  
  
-## 🪓 Raw Byte Ingestion
+## 🪓 Raw Byte Ingestion Highlight
 
 The Challenge: High-level web frameworks like Flask automatically unpack incoming network data into native text strings (request.json). In languages like Python, strings are strictly immutable and managed by unmanaged internal memory heaps, creating persistent "string ghosts" of raw credentials in RAM that can be targeted by memory-scraping attacks.
 
@@ -51,7 +51,7 @@ The Solution: Bypasses framework string allocation entirely by intercepting the 
 
 2. **Hardware-Level Carving**: Executes raw binary pattern matching via byte-splitting (`data.split(b'"password":"')`) to slice the credential payload directly out of the stream into a mutable `bytearray` without initializing a single Python string object.
 
-3. **Zero-String Local Hashing**: Feeds the raw mutable `bytearray` directly into `hashlib.sha1()` to check the 10k local blocklist matrix. Because the binary data stream is read directly at the byte level, no intermediate text decoding occurs.
+3. **Zero-String Local Hashing**: Feeds the raw mutable `bytearray` directly into `hashlib.sha1()` to check the 10k local blocklist set. Because the binary data stream is read directly at the byte level, no intermediate text decoding occurs.
 
 4. **Isolated Frame Confinement**: Because the third-party `zxcvbn` heuristics engine demands a string object, the text decoding process is strictly confined to a short-lived local function Stack Frame (`compute_isolated_entropy`). The exact microsecond calculations conclude, pointer references are snapped via explicit deletion, dropping the reference count to exactly zero (`0`) and forcing the Python Virtual Machine to mark the RAM slots for immediate hardware reclamation.
 
