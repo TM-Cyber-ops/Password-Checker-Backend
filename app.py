@@ -140,7 +140,7 @@ def analyze_password():
     if has_symbol:
         pool_size += 33
         pool_descriptions.append("Symbols (33)")
-    z_eval = zxcvbn.zxcvbn(user_password_bytes)
+    z_eval = compute_isolated_entropy(user_password_bytes)
     pattern_logs = []
     raw_entropy = password_length * math.log2(pool_size) if pool_size > 0 else 0
     working_entropy = raw_entropy
