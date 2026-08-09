@@ -18,11 +18,7 @@ import gc
 app = Flask(__name__)
 CORS(app)
 #NOTE:Log File Rotation, total max 5MB
-log_handler = RotatingFileHandler(   
-   'security_audit.log',
-   maxBytes=1024*1024,
-   backupCount= 5
-)
+log_handler = RotatingFileHandler('security_audit.log', maxBytes=1024*1024, backupCount= 5)
 log_handler.setLevel(logging.INFO)
 console_handler = logging.StreamHandler(sys.stderr)
 console_handler.setLevel(logging.ERROR)
@@ -31,11 +27,7 @@ def announce_rotation():
    sys.stderr.flush()
 log_handler.doRollover = lambda old_rollover=log_handler.doRollover: (old_rollover(), announce_rotation())
 #NOTE: Log file, *No passwords logged*
-logging.basicConfig( 
-   level=logging.INFO,
-   format='%(asctime)s - %(levelname)s - %(message)s',
-   handlers=[log_handler, console_handler]
-)
+logging.basicConfig( level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s', handlers=[log_handler, console_handler])
 debounce_timer = None
 #NOTE:Banned Password - local txt list (kinda redudent but its ok)
 try:
@@ -70,6 +62,12 @@ def check_pwned_api(user_password_bytes):
          return int(count) #Not so fun Times Leaked  
    return 0
 
+def compute_isolated_entropy(secure_buffer):
+    temp_string = secure_buffer.decode('utf-8')
+    score_results = zxcvbn.zxcvbn(temp_string)
+    del temp_string
+    return score_results
+
 #NOTE:added to stop Dos, every decvice has its own limit, added REDIS for scalability
 def get_true_client_ip():
     session_token = request.headers.get("X-Session-Token")
@@ -90,18 +88,17 @@ limiter = Limiter(
 
 #NOTE:checks passwords, this is core code for program, see how passwords are treated below
 def analyze_password():
-    data = request.get_json()
-    incoming_payload = data.get('password', '')
+    raw_data = request.get_data()
     try: 
-       user_password_bytes = bytearray(base64.b64decode(incoming_payload.encode('utf-8')))
+       user_password_bytes = bytearray(base64.b64decode(raw_data.split(b'"password":"')[1].split(b'"')[0]))
     except Exception:
-       user_password_bytes = bytearray(incoming_payload.encode('utf-8'))
-    del data 
-    del incoming_payload
+          try:
+             user_password_bytes = bytearray(raw_data.encode(b'"password":"')[1].split(b'"')[0])
+          except Exception:
+              return jsonify({"status": "empty", "message": "Enter a password above to begin analysis."})
+    del raw_data
     password_length = len(user_password_bytes)
-    if not user_password_bytes:
-      return jsonify({"status": "empty", "message": "Enter a password above to begin analysis."})
-
+      
     #NOTE:Level 0 rule set - Variables for allowed inputs
     has_upper = any(65 <= b <= 90 for b in user_password_bytes) #A-Z
     has_lower = any(97 <= b <= 122 for b in user_password_bytes) #a-z
@@ -111,29 +108,22 @@ def analyze_password():
        if any(b < 32 or b > 126 for b in user_password_bytes):
           logging.warning(f"Check failed. Reason: Illegal Character usage.")
           bad_character = chr(b)
-          return jsonify({
-             "status": "rejected", "message": f"REJECTED: Character '{bad_character}' is not allowed! Use letters, numbers, or: SPACE ! \" # $ % & ' ( ) * + , - . / : ; < = > ? @ [ \ \ ] ^ _ ` {{ | }} ~ "
-          }),
+          return jsonify({"status": "rejected", "message": f"REJECTED: Character '{bad_character}' is not allowed! Use letters, numbers, or: SPACE ! \" # $ % & ' ( ) * + , - . / : ; < = > ? @ [ \ \ ] ^ _ ` {{ | }} ~ "})
+
     ###NOTE: Hard Stop - Ban Checks here
     #FIX: Issue was here, now only matches at 100% for ban list, Had it trying to stop if more than 60% of the password was in the ban list but that failed.
-    if hashlib.sha1(user_password_bytes.decode('utf-8').encode('utf-8')).hexdigest().upper() in banned_memory_set:
+    if hashlib.sha1(user_password_bytes).hexdigest().upper() in banned_memory_set:
         local_ban_count = check_pwned_api(user_password_bytes)
         if local_ban_count > 0:
             logging.warning(f"Check failed. Reason: Local ban list match")
-            return jsonify({ 
-                "status": "pwned", "message": f"REJECTED: Common banned word or phrase match! Exposed {local_ban_count:,} times online!"
-            })
+            return jsonify({"status": "pwned", "message": f"REJECTED: Common banned word or phrase match! Exposed {local_ban_count:,} times online!"})
         else:
-            return jsonify({ 
-                "status": "pwned", "message": "REJECTED: Common banned word or phrase match."
-            })
+            return jsonify({"status": "pwned", "message": "REJECTED: Common banned word or phrase match."})
     #NOTE: Stops Further Checks If Leaked
     leak_count = check_pwned_api(user_password_bytes)
     if leak_count > 0:
      logging.warning(f"Check failed. Reason: Leaked password database match. Count: {leak_count}")
-     return jsonify({
-        "status": "pwned", "message": f"REJECTED: Exposed {leak_count:,} times online!"
-     })
+     return jsonify({"status": "pwned", "message": f"REJECTED: Exposed {leak_count:,} times online!"})
     
     #NOTE:Math heavy part - Be careful touching, A lot of work if it breaks
     pool_size = 0
@@ -150,7 +140,7 @@ def analyze_password():
     if has_symbol:
         pool_size += 33
         pool_descriptions.append("Symbols (33)")
-    z_eval = zxcvbn.zxcvbn(user_password_bytes.decode('utf-8'))
+    z_eval = zxcvbn.zxcvbn(user_password_bytes)
     pattern_logs = []
     raw_entropy = password_length * math.log2(pool_size) if pool_size > 0 else 0
     working_entropy = raw_entropy
