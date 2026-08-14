@@ -89,11 +89,12 @@ limiter = Limiter(
 #NOTE:checks passwords, this is core code for program, see how passwords are treated below
 def analyze_password():
     global current_buffer
+    raw_data = request.get_data()
     try: 
-       user_password_bytes = bytearray(base64.b64decode(request.get_data().split(b'"password":"')[1].split(b'"')[0]))
+       user_password_bytes = bytearray(base64.b64decode(raw_data.split(b'"password":"')[1].split(b'"')[0]))
     except Exception:
           try:
-             user_password_bytes = bytearray(request.get_data().split(b'"password":"')[1].split(b'"')[0])
+             user_password_bytes = bytearray(raw_data.split(b'"password":"')[1].split(b'"')[0])
           except Exception:
               return jsonify({"status": "empty", "message": "Enter a password above to begin analysis."})
     del raw_data
@@ -214,7 +215,7 @@ def wipe_ram_on_exit(exception=None):
       gc.collect()
 if __name__ == '__main__':
     print("=" * 70)
-    print("   🛡️  CRYPTOGRAPHIC EVALUATION ENGINE V2.12 ACTIVATED  🛡️")
+    print("   🛡️  CRYPTOGRAPHIC EVALUATION ENGINE V1.8 ACTIVATED  🛡️")
     print("   🚀 Built & Engineered by: Thomas D. Manning (2026)")
     print("   🔒 Infrastructure Status: Zero-Trust Security Perimeter Live")
     print("=" * 70)
